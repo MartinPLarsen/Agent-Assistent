@@ -6,7 +6,7 @@ A copy-and-configure template that bootstraps a fully functional AI agent throug
 
 1. **Clone the kit:**
    ```bash
-   git clone https://github.com/<your-username>/agent-starter-kit.git my-new-agent
+   git clone https://github.com/MartinPLarsen/agent-starter-kit.git my-new-agent
    ```
    Replace `my-new-agent` with whatever you want your agent's folder to be called.
 

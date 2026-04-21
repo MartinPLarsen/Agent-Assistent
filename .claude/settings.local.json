@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(rm -r:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)",
+      "Bash(sudo:*)",
+      "Read(.env*)",
+      "Edit(.env*)"
+    ],
+    "allow": [
+      "mcp__plugin_telegram_telegram__reply"
+    ]
+  }
+}

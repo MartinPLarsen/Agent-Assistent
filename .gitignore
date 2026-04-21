@@ -1,0 +1,19 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+*.log
+
+# Trigger.dev (generated after wizard)
+triggers/.trigger/
+triggers/node_modules/
+
+# Local env files (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Wizard backup (generated during Phase 6)
+CLAUDE.md.wizard-backup

@@ -274,11 +274,43 @@ Ask: "Vil du have dine vigtige crons i skyen via Trigger.dev? Det kraever en gra
 
 Explain briefly: "Skills er specialiserede evner — som en opskrift jeg folger for en bestemt opgave. F.eks. 'soeg pa YouTube' eller 'skriv et videoscript'."
 
-Show recommended skills based on archetype (from the archetype file) + selected tools. Ask:
+Kittet ships med skill-templates under `skills-templates/`. Under install kopierer wizarden de valgte ind i `.claude/skills/` og erstatter placeholder-tokens (`{{AGENT_NAME}}`, `{{USER_NAME}}`, `{{TIMEZONE}}`, `{{CHAT_ID}}`, `{{MEMORY_PATH}}`) med de rigtige værdier.
 
-> "Her er de skills jeg anbefaler baseret pa din opsaetning: [list]. Mangler der noget? Beskriv hvad du har brug for."
+**Step 3.5a — Present recommendations:**
 
-Note which skills to create. Skills go in `.claude/skills/` inside this agent folder.
+Read the archetype file loaded in Phase 2. For Orchestrator, the first recommendation is always `accountability-heartbeat` (it is the one shipped template). List the recommended skills from the archetype file in plain language. Ask:
+
+> "Her er de skills jeg anbefaler baseret pa din opsaetning: [list]. Vil du have dem alle, eller nogle af dem? Andre skills kan du bygge senere."
+
+**Step 3.5b — Install selected shipped templates:**
+
+For each selected skill that has a template in `skills-templates/`:
+
+1. Create the destination folder:
+   ```bash
+   mkdir -p .claude/skills/<skill-name>
+   ```
+2. Copy the template file:
+   ```bash
+   cp skills-templates/<skill-name>/SKILL.md .claude/skills/<skill-name>/SKILL.md
+   ```
+3. Substitute placeholder tokens using the values collected earlier in the wizard. Use `sed -i ''` on macOS (or `sed -i` on Linux):
+   ```bash
+   sed -i '' "s|{{AGENT_NAME}}|<agent_name>|g" .claude/skills/<skill-name>/SKILL.md
+   sed -i '' "s|{{USER_NAME}}|<user_name>|g" .claude/skills/<skill-name>/SKILL.md
+   sed -i '' "s|{{TIMEZONE}}|<timezone>|g" .claude/skills/<skill-name>/SKILL.md
+   sed -i '' "s|{{CHAT_ID}}|<chat_id>|g" .claude/skills/<skill-name>/SKILL.md
+   sed -i '' "s|{{MEMORY_PATH}}|memory|g" .claude/skills/<skill-name>/SKILL.md
+   ```
+4. Verify no placeholder tokens remain:
+   ```bash
+   grep -l '{{[A-Z_]*}}' .claude/skills/<skill-name>/SKILL.md && echo "ERROR: unsubstituted placeholder in <skill-name>"
+   ```
+   If any remain, abort and tell the user which value was missing.
+
+**Step 3.5c — Note any skills the user wants that have no template:**
+
+Skills without a template (e.g. `daily-rocks`, `humanizer`) are noted in `CAPABILITIES.md` as "planned — build with Claude Code on demand". They are NOT auto-created. Moving on.
 
 ### After all sub-steps
 
@@ -323,6 +355,7 @@ Explain briefly in the user's chosen language:
    **Example for Orchestrator:**
    > "Her er mine standard-rutiner for en orchestrator:
    > - **Keepalive** (hvert 20 min) — Holder min Telegram-forbindelse aktiv
+   > - **Heartbeat** (hver 2. time, hverdage 08-20) — Accountability-check mod Linear + commitments. Sender kun nudge hvis der er drift.
    > - **Morgenbriefing** (kl. 9:12) — Kalender + emails + opgaver + en anbefaling
    > - **Middag-nudge** (kl. 12:33) — Blidt check-in pa din top-prioritet
    > - **Aften-refleksion** (kl. 17:57) — Dagens review + carry-forward til i morgen
@@ -349,10 +382,21 @@ Format:
       "prompt": "Send a keepalive ping on Telegram.",
       "catchup": false,
       "enabled": true
+    },
+    {
+      "id": "heartbeat-every-2h",
+      "name": "Accountability heartbeat",
+      "agent": "<agent_name>",
+      "cron": "7 8-20/2 * * 1-5",
+      "prompt": "Run the accountability-heartbeat skill. Apply silence rules first, then check drift rules against Linear, Calendar, session log, and open commitments. Send at most one nudge on Telegram if drift is detected. Do not send a message otherwise.",
+      "catchup": false,
+      "enabled": true
     }
   ]
 }
 ```
+
+Only include `heartbeat-every-2h` in the registry if the user selected `accountability-heartbeat` during Phase 3.5. Other archetypes and users who skipped the skill get a keepalive-only registry.
 
 The `catchup` field controls whether a missed cron runs on next startup:
 - `true` for meaningful tasks (briefings, reflections, syncs)
@@ -726,7 +770,27 @@ Cloud cron env vars are managed in the Trigger.dev dashboard (Settings → Envir
 
 #### Archetype-specific sections to add:
 
-**Orchestrator:** Add Orchestrator Protocol (decision tree for inline vs. delegate), Telegram Proxy Commands (/crons, /status, /skills). Solo-first — if the user later adds more agents, they can add a team section manually.
+**Orchestrator:** Add Orchestrator Protocol (decision tree for inline vs. delegate), Telegram Proxy Commands (/crons, /status, /skills), AND (if `accountability-heartbeat` was installed in Phase 3.5) a **Session Log** section with the exact body shown below. Solo-first — if the user later adds more agents, they can add a team section manually.
+
+**Session Log section to write into the rewritten CLAUDE.md when heartbeat is installed:**
+
+> ## Session Log
+>
+> Every inbound Telegram message MUST be appended to `memory/session.log.md` immediately after you read it, BEFORE you respond. Format:
+>
+> > `## YYYY-MM-DDTHH:MMZ`
+> > `<one-sentence summary of what the user said, in present tense, under 120 characters>`
+>
+> Prepend the new entry (newest on top). After writing, check the file size: if it exceeds 100KB, or if the oldest entry is more than 48 hours old, trim the oldest entries until both constraints are satisfied. Keep the header comments intact.
+>
+> This log is read by the `accountability-heartbeat` skill to decide whether a Linear issue or commitment is actively being discussed. If you forget to write to it, the heartbeat loses context and may nudge incorrectly.
+
+Also create `memory/session.log.md` as part of Phase 6 activation. Write the file with this exact three-line header (one H1 + three HTML-comment lines, followed by a trailing blank line):
+
+- `# Session Log`
+- `<!-- Rolling window: 48 hours, max 100KB. Auto-trimmed on write. -->`
+- `<!-- Newest entries on top. Format: ## YYYY-MM-DDTHH:MMZ followed by one-line summary. -->`
+- `<!-- Machine-written by the agent on every inbound Telegram message. Do not hand-edit. -->`
 
 **Specialist:** Add Pipeline Protocol (step-by-step workflow, quality gates), Output Management (storage, naming, delivery)
 

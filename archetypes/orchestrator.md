@@ -37,6 +37,7 @@ A central coordinator that routes tasks to the right agent or handles them inlin
 | Name | Schedule | Purpose |
 |------|----------|---------|
 | keepalive | */20 * * * * | Maintain Telegram connection |
+| heartbeat-every-2h | 7 8-20/2 * * 1-5 | Accountability drift check (Linear + commitments + session log), sends nudge only if drift detected |
 | calendar-reminder | */10 * * * * | 15-min heads-up for upcoming events |
 | dream-sync | 3 12,15,20 * * * | Memory consolidation + sync |
 
@@ -44,6 +45,7 @@ A central coordinator that routes tasks to the right agent or handles them inlin
 Cloud crons (briefings, nudge, reflection) are the agent's most important daily routines — they MUST fire even if the user's computer is off. Local crons (keepalive, dream-sync) need filesystem access or only matter in active sessions.
 
 ## Recommended Skills
+- **accountability-heartbeat** — Drift-aware nudges when in-progress Linear issues or open commitments go silent (ships as a template with the kit — wizard installs it)
 - **daily-rocks** — Daily priority management (top 3 rocks)
 - **nudge** — Gentle midday check-in
 - **humanizer** — Make AI text sound human

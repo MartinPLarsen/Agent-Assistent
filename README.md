@@ -40,6 +40,8 @@ A copy-and-configure template that bootstraps a fully functional AI agent throug
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code)
 - The `telegram` plugin from the `claude-plugins-official` marketplace (enables the Telegram reply tool and `/telegram:configure` / `/telegram:access` setup skills). Optional but strongly recommended — most agent experiences rely on Telegram.
 - A Telegram bot token from @BotFather (free — the wizard walks you through creating one)
+- Your Telegram numeric chat ID — message `@userinfobot` once to get it. Required so the bot only listens to you, not to random Telegram users.
+- The ability to launch Claude Code with the `--channels plugin:telegram@claude-plugins-official` flag (the wizard generates a launcher script for you during Telegram setup). Without this flag the Telegram plugin never boots.
 - [Obsidian](https://obsidian.md) (free) — for the knowledge vault that your agent maintains. The wizard sets up the vault folder structure (`raw/`, `wiki/`, `output/`) for you.
 
 ## Session Resilience

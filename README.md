@@ -30,6 +30,8 @@ A copy-and-configure template that bootstraps a fully functional AI agent throug
 | 5. Knowledge Vault | Sets up an Obsidian-based knowledge base (raw → wiki → output) |
 | 6. Activation | Generates final config and goes live |
 
+Before Phase 1, a quick **Preflight** checks your machine (git, Node.js, Obsidian, the Telegram plugin) and hands you one consolidated list of anything to install — so all the terminal/download work happens up front instead of interrupting you mid-setup. It never installs anything for you; it just tells you what's missing and how to get it.
+
 ## Archetypes
 
 - **Orchestrator** — Coordinator + personal assistant that routes work between other agents and manages daily rhythms

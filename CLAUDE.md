@@ -29,6 +29,50 @@
 
 ---
 
+## Phase 0.5 — Preflight (Tools & Downloads Check)
+
+**Run this once, right after the Phase 1 language picker (Step 0) and before the profile questions.** It front-loads every "install / download something" step into one batch, so the user isn't interrupted again at Phase 3, 4, and 5. Skip on resume (if `steps_completed` already contains `phase_1`).
+
+**Goal:** detect what's already on the machine, then hand the user ONE consolidated checklist of whatever is still missing. **Do NOT install anything yourself** — `npx` logins open a browser, Obsidian is a GUI app, and Node installs need Homebrew/sudo; none of these can be driven from a tool call. Detect and guide only.
+
+### Step A — Detect (read-only — run these yourself)
+
+```bash
+which git node npm 2>/dev/null
+[ -d /Applications/Obsidian.app ] && echo "obsidian: installed" || echo "obsidian: missing"
+```
+
+Also read `~/.claude/settings.json` and check for `"telegram@claude-plugins-official": true` under `enabledPlugins` (that's the Telegram plugin). `claude` itself is obviously present — the user is talking to you inside it.
+
+### Step B — Present ONE consolidated checklist
+
+Map the results to the list below. Mark each line `[✓ installed]` or `[needs install]`, and show the install step ONLY for the missing ones. Keep the feature groups so the user installs only what matches the agent they want (translate to the chosen language):
+
+> **Quick machine check — install what you'll want, then say "klar" / "ready":**
+>
+> Core (needed for setup):
+> - git — [status] — manages your agent's repo. Get it: `xcode-select --install` (macOS) or https://git-scm.com
+>
+> Telegram (recommended — how most agents reach you):
+> - Telegram plugin — [status] — enable it inside Claude Code: run `/plugin`, find `telegram@claude-plugins-official`, enable, restart Claude Code
+> - A bot token — in the Telegram app, message `@BotFather`, send `/newbot`, save the token
+> - Your numeric chat ID — message `@userinfobot` in Telegram, note the number
+>
+> Cloud crons (optional — briefings/reminders that fire even when your Mac is off):
+> - Node.js 18+ — [status] — `brew install node` (macOS, needs Homebrew) or https://nodejs.org
+> - A free trigger.dev account — sign up at https://trigger.dev (browser login happens in Phase 4)
+>
+> Knowledge vault (optional — long-term memory in Obsidian):
+> - Obsidian — [status] — free app: https://obsidian.md
+
+Then say: *"Sig til når du har installeret det du vil bruge — eller 'spring over', så tager vi det undervejs."* (or the English equivalent). The optional tools can still be added at their own phase, so "skip" is fine — note it and move on.
+
+### After preflight
+
+Do NOT change `current_phase` — you're still inside Phase 1. Continue with Phase 1 Step 1 (the first profile question).
+
+---
+
 ## Phase 1 — Who Are You? (User Profile)
 
 **Goal:** Learn about the user and generate `USER.md`.
@@ -51,6 +95,8 @@ All subsequent wizard prompts, generated file contents, and confirmations must b
 ```
 
 The example prompts below are written in Danish. If the user picked English, translate each prompt live before asking it.
+
+**→ Now run Phase 0.5 — Preflight** (the machine/tools check). The language is set, so the checklist comes out in the user's language. When they say they're ready (or choose to skip), return here and continue with Step 1.
 
 **Step 1 — Greeting + first question:**
 

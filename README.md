@@ -4,18 +4,20 @@ A copy-and-configure template that bootstraps a fully functional AI agent throug
 
 ## Quick Start
 
-1. **Clone the kit:**
+1. **Get your own copy.** Easiest: click **"Use this template" → Create a new repository** on GitHub — you get a fresh repo with clean history, no detach step needed. Then clone *your* new repo:
    ```bash
-   git clone https://github.com/MartinPLarsen/agent-starter-kit.git my-new-agent
+   git clone https://github.com/<you>/<your-new-repo>.git my-new-agent
    ```
    Replace `my-new-agent` with whatever you want your agent's folder to be called.
+
+   *Alternative:* `git clone https://github.com/MartinPLarsen/agent-starter-kit.git my-new-agent` — but then the wizard asks you to detach from the template's git history on first run.
 
 2. **Open in Claude Code:**
    ```bash
    cd my-new-agent && claude
    ```
 
-3. **Follow the wizard.** On first run the kit detaches from the template's git history (`rm -rf .git && git init`) so your agent has its own clean repo. Then it asks you questions and sets itself up.
+3. **Follow the wizard.** It asks you questions and sets itself up. (If you cloned the template directly instead of using "Use this template", it first asks you to run `rm -rf .git && git init` in a terminal so your agent gets a clean repo — the agent's own safety rules stop it from doing that for you.)
 
 ## What the Wizard Does
 

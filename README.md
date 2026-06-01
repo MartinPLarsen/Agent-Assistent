@@ -17,7 +17,7 @@ A copy-and-configure template that bootstraps a fully functional AI agent throug
    cd my-new-agent && claude
    ```
 
-3. **Follow the wizard.** It asks you questions and sets itself up. (If you cloned the template directly instead of using "Use this template", it first asks you to run `rm -rf .git && git init` in a terminal so your agent gets a clean repo — the agent's own safety rules stop it from doing that for you.)
+3. **Wake the agent.** At the Claude Code prompt, type `hej` (or `hi`) — that kicks off the wizard. It then asks you questions and sets itself up. (If you cloned the template directly instead of using "Use this template", it first asks you to run `rm -rf .git && git init` in a terminal so your agent gets a clean repo — the agent's own safety rules stop it from doing that for you.)
 
 ## What the Wizard Does
 
@@ -44,7 +44,8 @@ A copy-and-configure template that bootstraps a fully functional AI agent throug
 - A Telegram bot token from @BotFather (free — the wizard walks you through creating one)
 - Your Telegram numeric chat ID — message `@userinfobot` once to get it. Required so the bot only listens to you, not to random Telegram users.
 - The ability to launch Claude Code with the `--channels plugin:telegram@claude-plugins-official` flag (the wizard generates a launcher script for you during Telegram setup). Without this flag the Telegram plugin never boots.
-- [Obsidian](https://obsidian.md) (free) — for the knowledge vault that your agent maintains. The wizard sets up the vault folder structure (`raw/`, `wiki/`, `output/`) for you.
+- [Node.js](https://nodejs.org) 18+ — only if you want cloud crons via Trigger.dev. The wizard's `npx trigger.dev` steps need it; skip it for a terminal-only or session-cron-only agent.
+- [Obsidian](https://obsidian.md) (free) — for the knowledge vault that your agent maintains. The wizard sets up the vault folder structure (`raw/`, `wiki/`, `output/`) for you. Optional — Phase 5 now lets you skip the vault and add it later.
 
 ## Session Resilience
 

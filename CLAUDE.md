@@ -25,6 +25,7 @@
 
    Wait for their confirmation before proceeding to Phase 1. Skip this step on subsequent runs (steps_completed will no longer be empty).
 5. **Resume logic:** Before starting a phase, check if its output files already have real content (not `{{PLACEHOLDER}}` markers). If USER.md has real content, Phase 1 is done regardless of state. If SOUL.md has a real personality, Phase 2 is done. Adjust `current_phase` accordingly and skip completed phases.
+6. **State writes are MERGE, never overwrite.** Every time a phase says "Update `.setup-state.json`" and shows a partial object, first READ the current file, merge the shown keys into it, then write the FULL object back. Never write only the keys from the example — doing so wipes earlier values like `language` (Step 0), `agent_name`, `archetype`, or `vault_path`, which silently breaks the chosen language mid-flow and corrupts crash-resume.
 
 ---
 
@@ -499,17 +500,18 @@ Based on the crons configured above, recommend which should be cloud vs local:
 
 After confirmation:
 
-1. **Run `trigger.dev init`:**
-   In the agent root, execute:
+1. **Run `trigger.dev login` + `init` (the USER runs these — they're interactive):**
+   `npx trigger.dev` opens a browser to log in and asks interactive TUI prompts. The agent CANNOT drive a browser login or a TUI from a tool call — if you run it via Bash it just hangs. So ask the user to run these in their own terminal, from the agent root, and tell you when done:
    ```bash
+   npx trigger.dev@latest login
    npx trigger.dev@latest init
    ```
-   Help the user answer the init prompts:
+   Tell them how to answer the `init` prompts:
    - *Project ref* → the ref from Phase 3
    - *TypeScript or JavaScript* → TypeScript
-   - *Package manager* → whatever the user prefers (npm is safe default)
+   - *Package manager* → whatever they prefer (npm is a safe default)
 
-   This creates `trigger.config.ts`, installs the SDK, and generates a starter task file — everything scaffolded by trigger.dev itself, not by us.
+   This creates `trigger.config.ts`, installs the SDK, and generates a starter task file — scaffolded by trigger.dev itself, not by us. Requires Node.js installed. Wait for the user's "done" before continuing.
 
 2. **Write the first task with the user:**
    Open the starter task file that `init` created (usually under `src/trigger/`). Rewrite it together with the user so it does what they actually want. Use this pattern for scheduled tasks:
@@ -558,7 +560,8 @@ After confirmation:
 
    Provide the dashboard URL: `https://cloud.trigger.dev/projects/v3/<project_ref>/settings/environment-variables`
 
-5. **Deploy:**
+5. **Deploy (the user runs this too — it needs the login from step 1):**
+   Ask the user to run, from the agent root, and confirm it succeeded:
    ```bash
    npx trigger.dev@latest deploy
    ```
@@ -778,7 +781,7 @@ On every new session, complete these steps before responding:
 6. Update `last_run.json` after each cron fires
 7. Read `memory/convo_log.md` for recent session context
 8. Read `memory/open_commitments.md` for pending follow-ups (if file exists)
-9. Confirm on Telegram that you're back online — list every cron you created by name and next fire time
+9. Confirm you're back online — list every cron you created by name and next fire time. Send this via the Telegram reply tool if Telegram was configured; otherwise print it in the terminal.
 
 ## Cron Management
 
@@ -893,6 +896,15 @@ Also create `memory/session.log.md` as part of Phase 6 activation. Write the fil
 - `<!-- Rolling window: 48 hours, max 100KB. Auto-trimmed on write. -->`
 - `<!-- Newest entries on top. Format: ## YYYY-MM-DDTHH:MMZ followed by one-line summary. -->`
 - `<!-- Machine-written by the agent on every inbound Telegram message. Do not hand-edit. -->`
+
+Also create `memory/open_commitments.md` in Phase 6 (the `accountability-heartbeat` skill reads it and does NOT guard against a missing file, so the first heartbeat fire errors if it doesn't exist). Write this skeleton:
+
+```markdown
+# Open Commitments
+
+## Active
+<!-- Pending follow-ups, one per line as: - **<short summary>** -->
+```
 
 **Specialist:** Add Pipeline Protocol (step-by-step workflow, quality gates), Output Management (storage, naming, delivery)
 

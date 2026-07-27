@@ -117,7 +117,10 @@ read rules. Shipped as `skills/memory/SKILL.md` plus a startup-loaded protocol s
 | Index | `memory/MEMORY.md` | permanent | every session |
 | Facts | `memory/facts/*.md` | permanent | on demand, by description match |
 | Session state | `memory/convo_log.md` | current session | every session |
-| Long-term distilled | Obsidian vault (optional) | permanent | on command |
+
+Decided 2026-07-27: **no Obsidian vault.** v1 carried it as a fourth layer and a hard
+dependency on a GUI app; `memory/facts/` covers the same need in plain markdown that any
+runtime can read. Phase 5 of the v1 wizard is deleted, not ported.
 
 Fact file format — one fact per file, frontmatter `name` / `description` / `type`,
 types `user | feedback | project | reference`, `[[links]]` between facts. `feedback` and
@@ -152,10 +155,21 @@ Shipped watchers:
 | `calendar-invites` | Google Calendar | invitation still pending response |
 | `unanswered` | Gmail / Telegram | a direct question to the user with no reply in 24h |
 | `commitment-drift` | `open_commitments.md` | item unmentioned in 24h |
+| `daily-digest` | all of the above + git activity | once a day, always (see §4.5) |
 
 Runner rules: silence checks first (outside 08–20, weekend, active calendar event, user
 messaged within 15 min), then at most **one** nudge per fire, then a per-watcher cooldown
 so nothing nags. Adding a watcher is a new markdown file, not a code change.
+
+Two constraints that came out of the Carson interview (§9):
+
+- **Nudges must be answerable with one word from a phone.** Every nudge template ends in a
+  closed choice (`luk` / `udskyd` / `senere`), never an open question. The user is on a
+  phone screen; a nudge that needs a paragraph back is a nudge that gets ignored.
+- **Watchers declare a model tier.** A watcher fires every 2 hours; running all of them on
+  a premium model is how a background loop quietly becomes the biggest line on the bill.
+  Scanning and matching run cheap; only composing the final nudge needs quality. The
+  watcher file carries a `model: cheap | quality` field and the runner honours it.
 
 ### 4.4 Project bootstrap
 
@@ -167,6 +181,28 @@ Scaffold: `git init` + first commit, `README.md`, `AGENTS.md` + `CLAUDE.md` poin
 `.mcp.json` seeded from the tools the user already has, `docs/decisions/` for ADRs,
 stack-appropriate `.gitignore`, symlink to the shared skills library.
 Register: append the new project to `CONTEXT.md` so the PA knows about it from day one.
+
+---
+
+### 4.5 Daily digest and self-review
+
+Two additions from §9. They are what turns the PA from a nagger into something that
+reports.
+
+**`daily-digest` watcher.** Every other watcher only speaks when something is wrong. This
+one speaks once a day regardless: what actually happened yesterday across the user's
+systems (issues moved, commits landed, mails that need answers, tomorrow's calendar),
+each line carrying a deep link to the thing itself. The point is not the summary, it is
+the links: the user scans it, spots the one line that looks off, and clicks straight
+through. Also carries a one-line watcher-health report, so a watcher that has been
+erroring silently for a week becomes visible.
+
+**`self-review` cron, weekly.** The PA grades its own week against a small rubric and
+proposes changes to itself: which nudges were acted on and which were ignored, which
+watchers never fired, which memory facts were written but never read again, which caps
+were hit. Output is a short proposal the user approves or rejects, never a silent
+self-edit. This is the compounding mechanism, and it is the reason `capture-skill` has
+something to feed on.
 
 ---
 
@@ -194,11 +230,11 @@ Register: append the new project to `CONTEXT.md` so the PA knows about it from d
 | A | Repo surgery: merge Codex assets, delete `archetypes/` + `discord-bridge/`, split wizard into `setup/*.md`, `AGENTS.md` canonical + `CLAUDE.md` pointer, remove self-rewrite, fix `bypassPermissions`, fix the vault-skip convo-log bug | 1 h |
 | B | Memory contract: skill, templates, index caps, prune cron | 1.5 h |
 | C | Context harvest: `setup/00-harvest.md`, `CONTEXT.md` template, `/harvest` command | 1 h |
-| D | Watchers: runner + 5 watcher definitions + heartbeat rewrite | 1.5 h |
-| E | Skills: `new-project`, `capture-skill`, `handoff`, `daily-briefing` | 1.5 h |
+| D | Watchers: runner + 6 watcher definitions (incl. `daily-digest`) + heartbeat rewrite | 2 h |
+| E | Skills: `new-project`, `capture-skill`, `handoff`, `daily-briefing`, `self-review` | 2 h |
 | F | README rewrite + end-to-end wizard run on a throwaway agent | 1 h |
 
-Total ≈ 7.5 h. One evening plus a morning.
+Total ≈ 8.5 h. One evening plus a morning.
 
 Each phase is one commit on `mal/v2`, Conventional Commits, no push until Martin says go.
 
@@ -212,12 +248,53 @@ Each phase is one commit on `mal/v2`, Conventional Commits, no push until Martin
 - **Vector search over memory** — the index-plus-description pattern works at the scale a
   single user generates. Add embeddings only if recall measurably fails.
 - **More archetypes** — the whole point of v2 is that there is one.
+- **Cloud/parallel agent execution** (§9) — belongs to Martin's dev workflow, not to a
+  single long-lived assistant session.
 
 ---
 
-## 8. Open questions for Martin
+## 8. Decisions taken
 
-1. Should the kit stay a public template, or go private? Some of the harvest logic reads
-   the user's machine layout; nothing is transmitted, but it changes the README's tone.
-2. Keep the Obsidian vault as an optional fourth memory layer, or fold it into
-   `memory/facts/` and drop the dependency?
+| Date | Question | Answer |
+|------|----------|--------|
+| 2026-07-27 | Merge the Codex repo? | Yes. `agent-starter-kit-codex` folds in here and is archived. |
+| 2026-07-27 | Public template or private? | **Private first.** Martin tests it on himself before it goes public. README written for an audience of one for now. |
+| 2026-07-27 | Keep the Obsidian vault? | **Dropped.** Three memory layers, no GUI dependency. |
+
+---
+
+## 9. Input: "Most Valuable Skill of 2026: Managing AI Agents"
+
+Greg Isenberg with Ryan Carson (Untangle, ex-Treehouse), 44:47, published 2026-07-24.
+`https://www.youtube.com/watch?v=vJEy3nP2_C8`. Transcript pulled from native captions.
+
+Carson's core claim: your job is now managing agents, the bottleneck is how fast you can
+make high-stakes decisions, and the winners build loops that run without them. Three of
+his patterns transfer directly to this kit.
+
+**Adopted:**
+
+| Pattern | His version | Kit version |
+|---------|-------------|-------------|
+| Production watchdog | Daily 9am job rolls up what paid customers did, into an admin page where every line deep-links to the actual session. "Chief of staff showing up with what happened yesterday." | `daily-digest` watcher (§4.5). The links are the feature, not the summary. |
+| Self-improvement loop | Daily job grades agent conversations against a rubric, spawns a child session to fix anything below threshold. Ships ~3 paper-cut fixes a day he would never have prioritised. | `self-review` cron (§4.5), proposing rather than self-editing. |
+| "How do you know it failed?" | Explicit design step: every automation needs a route by which its failures reach a human. | Watcher-health line in the digest. v1's heartbeat exits silently on error, so a broken watcher stays broken forever. |
+| Model routing | $20k/month in tokens was unsustainable; loops moved to a cheap fine-tuned model, premium reserved for hard tasks. | `model: cheap \| quality` per watcher (§4.3). |
+| Pin two or three, let the rest rip | Paper list of the day's must-ships; everything else is checked every ~25 min. | `daily-briefing` returns a top three and stays quiet about the rest. Matches the ADHD calibration in `USER.md`. |
+| Playbook ≠ skill | A playbook is an ordered list of what to do and how to do it right; a skill is broader capability. | Confirms the split between `skills/` (capability) and `watchers/` (declarative playbook). |
+
+**Rejected, with reasons:**
+
+- *"Work in the cloud, not locally"* and the whole parallel-VM argument. He is describing
+  a code-writing factory running 10 concurrent agents at 22-25 PRs a day. A personal
+  assistant is one long-lived session; cloud VMs solve a collision problem it does not
+  have. Relevant to Martin's development workflow, not to this kit.
+- *"Never build on a frontier-lab stack"* — aimed at companies spending $20k/month who
+  risk vendor lock-in. This kit is a personal assistant, and its whole premise is running
+  on whatever runtime the user already has. Wrong scale.
+- The Devon-specific enthusiasm is a vendor pitch from an evidently happy customer. The
+  underlying patterns hold; the product recommendation is not evidence.
+
+**Parked for the separate conversation about Martin's own setup:** parallel cloud agents
+for Content Platform and Spisdigmæt, model routing to cut token spend, and a production
+watchdog against the real products rather than against the assistant.

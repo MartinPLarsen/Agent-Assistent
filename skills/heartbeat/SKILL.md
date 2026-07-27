@@ -1,6 +1,6 @@
 ---
 name: accountability-heartbeat
-description: "Dynamic accountability heartbeat for {{AGENT_NAME}}. Fires on a cron schedule while the session is open, reads Linear + Calendar + session.log + open_commitments as ground truth, and nudges {{USER_NAME}} only when drift is detected. Offered by Agent Starter Kit — Orchestrator archetype."
+description: "Dynamic accountability heartbeat for {{AGENT_NAME}}. Fires on a cron schedule while the session is open, reads Linear + Calendar + session.log + open_commitments as ground truth, and nudges {{USER_NAME}} only when drift is detected."
 ---
 
 # {{AGENT_NAME}} Heartbeat — Dynamic Accountability

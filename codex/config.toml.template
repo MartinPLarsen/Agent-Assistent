@@ -1,0 +1,28 @@
+# Codex CLI configuration — populated during wizard phase 6
+# Final destination: ~/.codex/config.toml
+#
+# Placeholders (replaced by the agent during phase 6):
+#   {{KIT_PATH}}    — absolute path to the kit folder
+#   {{MCP_BLOCKS}}  — generated [mcp_servers.X] blocks (one per server chosen in phase 3)
+
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+sandbox = "macos"
+approval_policy = "on-request"
+
+[notify]
+command = "{{KIT_PATH}}/scripts/on-stop.sh"
+
+# --- MCP servers chosen in wizard phase 3 ---
+{{MCP_BLOCKS}}
+
+# Example MCP servers (commented out — uncomment to add later):
+#
+# [mcp_servers.context7]
+# command = "npx"
+# args = ["-y", "@upstash/context7-mcp"]
+#
+# [mcp_servers.firecrawl]
+# command = "npx"
+# args = ["-y", "firecrawl-mcp-server"]
+# env = { FIRECRAWL_API_KEY = "your-key-here" }

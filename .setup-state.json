@@ -1,7 +1,8 @@
 {
   "completed": false,
-  "current_phase": 1,
+  "current_phase": 0,
+  "language": null,
   "agent_name": null,
-  "archetype": null,
+  "channel": null,
   "steps_completed": []
 }

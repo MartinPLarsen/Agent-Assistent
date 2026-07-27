@@ -238,6 +238,24 @@ Total ≈ 8.5 h. One evening plus a morning.
 
 Each phase is one commit on `mal/v2`, Conventional Commits, no push until Martin says go.
 
+### Built 2026-07-27
+
+All six phases done on `mal/v2`, `556d247`..`256ebb6`. Phase C folded into A, since
+splitting the wizard meant writing `setup/00-harvest.md` anyway.
+
+Three bugs found while building, each the same shape — something reads a file nothing
+writes:
+
+1. `memory/session.log.md` had no writer, and every watcher reads it. Caught by the
+   consistency check, not by review.
+2. `setup.sh --link-skills` only ever added symlinks, so a deleted skill left a dangling
+   link that Claude Code still lists.
+3. The merged crons example still posted to Discord and did its own UTC conversion.
+
+`scripts/check.sh` now guards the class: dangling skill-table entries, watchers missing
+fields, a broken phase chain, `bypassPermissions` creeping back. It was tested in both
+directions — passing today proves nothing unless it also fails when the rule is removed.
+
 ---
 
 ## 7. Explicitly deferred

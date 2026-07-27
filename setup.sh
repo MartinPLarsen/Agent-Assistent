@@ -12,6 +12,14 @@ link_skills() {
   # Claude Code discovers skills in .claude/skills/. The canonical copies live in
   # skills/, so each one gets a symlink. Other runtimes read skills/ directly.
   mkdir -p "$KIT_DIR/.claude/skills"
+
+  # Drop links whose skill is gone, otherwise a deleted skill stays discoverable
+  # and the agent loads instructions for something that no longer exists.
+  for link in "$KIT_DIR"/.claude/skills/*; do
+    [ -L "$link" ] || continue
+    [ -e "$link" ] || { rm "$link"; echo "Removed dead link: $(basename "$link")"; }
+  done
+
   local n=0
   for dir in "$KIT_DIR"/skills/*/; do
     [ -f "${dir}SKILL.md" ] || continue

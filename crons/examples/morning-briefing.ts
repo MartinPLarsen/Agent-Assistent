@@ -1,38 +1,53 @@
-import { schedules } from "@trigger.dev/sdk/v3";
+import { schedules, logger } from "@trigger.dev/sdk/v3";
 
 /**
- * Posts a morning briefing to Discord at 07:00 user-local time.
+ * Morning briefing, sent to Telegram.
  *
- * Adjust `cron` for your timezone. For Europe/Copenhagen 07:00:
- *   summer (CEST): "0 5 * * *" UTC
- *   winter (CET):  "0 6 * * *" UTC
+ * This is a cloud routine: it fires whether or not the machine is on, which is
+ * the whole reason a briefing belongs here rather than in a session cron.
  *
- * Or use a service like https://crontab.guru to translate local time to UTC.
+ * Give `cron` a timezone and write the time you actually mean. Converting to
+ * UTC by hand works until the clocks change, and then it is wrong twice a year
+ * in a way nobody notices for a week.
  */
 export const morningBriefing = schedules.task({
   id: "morning-briefing",
-  cron: "0 5 * * *", // 07:00 Europe/Copenhagen during CEST
-  run: async () => {
-    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-    if (!webhookUrl) {
-      throw new Error("DISCORD_WEBHOOK_URL not set in Trigger.dev env vars");
+  cron: {
+    pattern: "12 9 * * 1-5",
+    timezone: "Europe/Copenhagen",
+  },
+  run: async (payload) => {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+
+    // Fail loudly. A briefing that quietly stops arriving is worse than one
+    // that errors in the dashboard, because nobody goes looking for the first.
+    if (!token || !chatId) {
+      throw new Error(
+        "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing. Set both in the " +
+          "Trigger.dev dashboard: Settings, Environment Variables, Production.",
+      );
     }
 
-    const message = [
-      "Good morning. Here's your briefing prompt:",
+    logger.info("Briefing firing", { at: payload.timestamp });
+
+    // Replace this with what the briefing should actually contain: call an API,
+    // read a database, ask a model. The skeleton exists to prove the delivery
+    // path works end to end before anything is built on top of it.
+    const text = [
+      "Godmorgen.",
       "",
-      "Reply with: today's top 3 priorities, anything overdue from open commitments,",
-      "and one observation from yesterday's vault entries (if any).",
+      "Cloud-briefingen kører. Erstat indholdet her med det du faktisk vil vide.",
     ].join("\n");
 
-    const res = await fetch(webhookUrl, {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ content: message }),
+      body: JSON.stringify({ chat_id: chatId, text }),
     });
 
     if (!res.ok) {
-      throw new Error(`Discord webhook failed: ${res.status} ${await res.text()}`);
+      throw new Error(`Telegram send failed: ${res.status} ${await res.text()}`);
     }
   },
 });

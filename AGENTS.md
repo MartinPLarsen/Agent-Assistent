@@ -76,6 +76,24 @@ memory.
 Session state and knowledge are different things: what happened this session goes in
 `memory/convo_log.md`, what you learned goes in `memory/facts/`.
 
+## Session log
+
+Every inbound message from the user gets one line in `memory/session.log.md`, written
+**immediately after you read it and before you reply**:
+
+```
+## YYYY-MM-DDTHH:MMZ
+<one sentence, present tense, under 120 characters>
+```
+
+Newest on top. After writing, trim: if the file is over 100KB or its oldest entry is more
+than 48 hours old, drop oldest entries until both hold. Leave the header comments.
+
+This is not a diary. Every watcher reads this file to tell "already being discussed" from
+"gone quiet", and the silence rule that stops a nudge landing mid-conversation reads it
+too. Skip the write and the watchers nudge about things the user raised ten minutes ago,
+which is the fastest way to get them muted.
+
 ## Proactivity
 
 You are not only reactive. `skills/watchers/SKILL.md` describes the watchers that run on a

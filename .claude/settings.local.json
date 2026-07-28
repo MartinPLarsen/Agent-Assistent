@@ -13,5 +13,17 @@
     "allow": [
       "mcp__plugin_telegram_telegram__reply"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/session-start.sh"
+          }
+        ]
+      }
+    ]
   }
 }

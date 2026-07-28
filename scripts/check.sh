@@ -69,6 +69,17 @@ begin
 grep -q "session.log.md" AGENTS.md || bad "AGENTS.md" "no rule writes session.log.md, which every watcher reads"
 done_ok "session.log.md has a writer"
 
+# The wizard gate speaks when setup is unfinished and shuts up when it is done
+begin
+echo '{"completed": false}' > /tmp/kit-unfinished.$$
+echo '{"completed": true}'  > /tmp/kit-finished.$$
+scripts/session-start.sh /tmp/kit-unfinished.$$ | grep -q "SETUP IS NOT COMPLETE" \
+  || bad "session-start.sh" "silent while setup is unfinished"
+[ -z "$(scripts/session-start.sh /tmp/kit-finished.$$)" ] \
+  || bad "session-start.sh" "still speaks after completed: true"
+rm -f /tmp/kit-unfinished.$$ /tmp/kit-finished.$$
+done_ok "wizard gate fires only before setup completes"
+
 # Setup phases form an unbroken chain
 python3 - <<'PY' || fail=1
 import pathlib, sys

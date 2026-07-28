@@ -3,6 +3,15 @@
 Your instructions are in `AGENTS.md`. Read it in full now and follow it. Everything below
 is Claude-specific plumbing, not a second set of rules.
 
+## Setup gate
+
+`scripts/session-start.sh` runs as a `SessionStart` hook (wired in
+`.claude/settings.local.json`). While `.setup-state.json` has `completed: false` it injects
+an instruction to run the wizard before anything else; once the wizard sets
+`completed: true` it prints nothing and never fires again. Claude Code does not load
+`AGENTS.md` on its own, so this is what makes the gate reliable rather than a pointer the
+model may or may not follow.
+
 ## Skills
 
 `skills/<name>/SKILL.md` is the canonical copy; `setup.sh` symlinks each one into

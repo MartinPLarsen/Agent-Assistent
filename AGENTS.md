@@ -120,10 +120,10 @@ the way it did, what was learned — belongs in the brain. When genuinely torn, 
 it is the layer with room to grow.
 
 **Capture runs without you.** If `brain.capture_hook` is true, every Claude Code session on
-this machine appends a line to the brain's `.harvest-queue.jsonl` when it ends. The daily
-harvest reads that queue and turns the day into a session note, then folds the note into
-the pages it touches. A note that never reaches a page is an input nobody digested; the
-brain grows through its pages, not its notes.
+this machine appends a line to the brain's `.harvest-queue.jsonl` when it ends. Once a day
+the `daily-harvest` skill turns that queue into a session note and folds the note into the
+pages it touches. A note that never reaches a page is an input nobody digested; the brain
+grows through its pages, not its notes.
 
 ## Session log
 
@@ -180,6 +180,7 @@ than improvising.
 | `capture-skill` | a task taught you something worth keeping |
 | `handoff` | the session is ending or context is running out |
 | `daily-briefing` | the daily routine fires |
+| `daily-harvest` | the harvest routine fires, or the user asks to capture yesterday into the brain |
 | `self-review` | the weekly self-review routine fires |
 
 On Claude Code these are symlinked into `.claude/skills/` and load via the Skill tool. On

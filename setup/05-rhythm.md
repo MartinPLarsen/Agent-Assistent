@@ -16,17 +16,23 @@ session cron, close the laptop, and then wonder why it never arrives.
 > "Jeg foreslår tre til at starte med:
 >
 > Daglig briefing, hver morgen: hvad der skete i går, hvad der venter i dag, med links.
+> Daglig høst, sidst på dagen: jeg samler dagens arbejde ind i din second brain. Du
+> hører ikke fra mig, medmindre noget er gået galt.
 > Watchers, hver anden time i arbejdstiden: siger kun noget hvis noget driver.
 > Ugentlig self-review: jeg bedømmer min egen uge og foreslår justeringer.
 >
 > Lyder det rigtigt, eller vil du skrue på det?"
 
-Recommend the briefing as a cloud routine and the other two as session routines. The
-briefing is the one that hurts to miss.
+Recommend the briefing as a cloud routine and the rest as session routines. The briefing is
+the one that hurts to miss.
+
+Offer the harvest only if phase 7 set up a brain. Without one it has nowhere to write, and
+a routine that cannot do its job is worse than a missing one — it looks like coverage.
 
 Ask for times only after they have said yes to the set. Default to something early enough
-to be useful and late enough to have news: a briefing around 09:00, watchers every two
-hours between 08:00 and 20:00 on weekdays, the review on a Monday morning.
+to be useful and late enough to have news: a briefing around 09:00, the harvest in the
+evening once the day's work is done, watchers every two hours between 08:00 and 20:00 on
+weekdays, the review on a Monday morning.
 
 ## Only enable what has a source
 
@@ -48,6 +54,7 @@ This is what the assistant reads at startup. Write it now.
   "language": "da",
   "routines": [
     { "id": "daily-briefing", "where": "cloud",   "cron": "12 9 * * 1-5", "enabled": true },
+    { "id": "daily-harvest",  "where": "session", "cron": "23 18 * * *", "enabled": true },
     { "id": "watchers",       "where": "session", "cron": "7 8-20/2 * * 1-5", "enabled": true },
     { "id": "self-review",    "where": "session", "cron": "5 9 * * 1", "enabled": true }
   ],

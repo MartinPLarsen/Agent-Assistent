@@ -1,6 +1,6 @@
 ---
 name: daily-briefing
-description: Use when the daily briefing routine fires, or when the user asks what is on today, what they should focus on, or where things stand. Produces a short scannable brief ending in one recommendation.
+description: Use when the daily briefing routine fires, or when the user asks what is on today, what they should focus on, or where things stand. Produces a short scannable brief ending in one recommendation. SKIP for writing yesterday into the brain — that is daily-harvest, which speaks to nobody; this one speaks to the user and writes nothing.
 ---
 
 # Daily briefing

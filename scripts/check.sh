@@ -69,6 +69,18 @@ begin
 grep -q "session.log.md" AGENTS.md || bad "AGENTS.md" "no rule writes session.log.md, which every watcher reads"
 done_ok "session.log.md has a writer"
 
+# Every routine phase 5 offers must have something that knows how to run it. A routine id
+# with no matching skill fires into nothing, and the failure is invisible: the cron exists,
+# the user believes it is covered, and no output was ever expected.
+begin
+for id in $(grep -oE '\{ "id": "[a-z-]+"' setup/05-rhythm.md | sed 's/.*"id": "//;s/"//'); do
+  case "$id" in
+    watchers) [ -d "skills/watchers" ] || bad "05-rhythm.md" "routine '$id' has no skill" ;;
+    *) [ -d "skills/$id" ] || bad "05-rhythm.md" "routine '$id' has no skills/$id/" ;;
+  esac
+done
+done_ok "every offered routine has a skill"
+
 # The wizard gate speaks when setup is unfinished and shuts up when it is done
 begin
 echo '{"completed": false}' > /tmp/kit-unfinished.$$
@@ -97,16 +109,17 @@ say "setup phase chain intact" "ok"
 begin
 if command -v node >/dev/null 2>&1; then
   node scripts/brain.mjs selftest >/dev/null 2>&1 || bad "brain.mjs" "selftest failed"
-  done_ok "brain engine selftest"
+  node scripts/harvest.mjs selftest >/dev/null 2>&1 || bad "harvest.mjs" "selftest failed"
+  done_ok "brain and harvest selftests"
 else
-  say "brain engine selftest" "skipped — no node"
+  say "brain and harvest selftests" "skipped — no node"
 fi
 
 # Every script the brain phase tells the user to run must exist and be executable. A phase
 # that names a missing script fails in front of the user, mid-setup, which is the worst
 # possible moment to discover it.
 begin
-for s in scripts/brain.mjs scripts/memory-caps.sh scripts/install-capture-hook.sh scripts/capture-session.sh; do
+for s in scripts/brain.mjs scripts/harvest.mjs scripts/memory-caps.sh scripts/install-capture-hook.sh scripts/capture-session.sh; do
   [ -f "$s" ] || bad "$s" "referenced by setup/07-brain.md but missing"
   [ -x "$s" ] || bad "$s" "not executable"
 done

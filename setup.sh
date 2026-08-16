@@ -40,7 +40,9 @@ fi
 # Detach from the template's history so the user's agent gets its own repo.
 # Only fires when the remote still points at the template — never on a repo
 # the user has already made theirs.
-if git -C "$KIT_DIR" remote get-url origin 2>/dev/null | grep -q "agent-starter-kit"; then
+# Both names are matched on purpose: the repo was renamed from agent-starter-kit to
+# Agent-Assistent on 2026-08-16, and clones taken before that still carry the old remote.
+if git -C "$KIT_DIR" remote get-url origin 2>/dev/null | grep -qiE "agent-starter-kit|Agent-Assistent"; then
   echo "This repo still points at the template:"
   echo "  $(git -C "$KIT_DIR" remote get-url origin)"
   echo
@@ -50,7 +52,7 @@ if git -C "$KIT_DIR" remote get-url origin 2>/dev/null | grep -q "agent-starter-
       mv "$KIT_DIR/.git" "$KIT_DIR/.git-template-backup"
       git -C "$KIT_DIR" init -q
       git -C "$KIT_DIR" add .
-      git -C "$KIT_DIR" commit -q -m "chore: initial commit from agent starter kit"
+      git -C "$KIT_DIR" commit -q -m "chore: initial commit from the assistant template"
       echo "Fresh history created. The old one is in .git-template-backup — delete it when you are happy."
       ;;
     *)

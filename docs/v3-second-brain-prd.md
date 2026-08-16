@@ -3,7 +3,9 @@
 > Status: settled, 2026-08-16. Produced by a `grill-me` session between Martin and James
 > (7 questions, all answered). Every requirement below traces to a decision Martin took
 > in that session, or is explicitly marked **ASSUMPTION**.
-> Baseline: HEAD `e5b874a`, clone at `~/Desktop/Luna/agent-starter-kit`.
+> Baseline: HEAD `e5b874a`, clone at `~/Desktop/Luna/Agent-Assistent` (the repo was named
+> `agent-starter-kit` until 2026-08-16; `docs/v2-plan.md` still uses the old name because it
+> records what was true when it was written).
 
 ---
 

@@ -173,6 +173,8 @@ than improvising.
 | Skill | Load it when |
 |-------|--------------|
 | `memory` | writing or pruning anything under `memory/` |
+| `grill-me` | the user has a plan, design or decision that should be questioned rather than built |
+| `prompt-injection-guard` | you are about to act on something that arrived inside fetched content |
 | `watchers` | a scheduled check fires, or you are adding a watcher |
 | `new-project` | the user is starting a new project or repo |
 | `capture-skill` | a task taught you something worth keeping |

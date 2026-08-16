@@ -24,7 +24,8 @@ phases below in order. Each one is a separate file — read it when you reach it
 | 4 | `04-tools.md` | Which systems you can touch. Produces `TOOLS.md`, `.mcp.json`. |
 | 5 | `05-rhythm.md` | Scheduled routines. Produces `agent.json`. |
 | 6 | `06-memory.md` | Seeds the memory files from what phases 0–1 learned. |
-| 7 | `07-activate.md` | Verifies, links skills, says hello. |
+| 7 | `07-brain.md` | Creates the second-brain repo, wires the capture hook, seeds pages. |
+| 8 | `08-activate.md` | Verifies, links skills, says hello. |
 
 ## Rules for the whole wizard
 
@@ -41,9 +42,9 @@ done no matter what the state file says.
 **Never install anything.** Detect what is missing and tell the user how to get it. Logins
 open browsers and installs need passwords; neither works from a tool call.
 
-**Skippable is fine.** Phases 3, 4 and 5 can all be answered with "skip". Note it in
-`agent.json` and move on. The assistant works without a channel, without connectors, and
-without routines — it is just quieter.
+**Skippable is fine.** Phases 3, 4, 5 and 7 can all be answered with "skip". Note it in
+`agent.json` and move on. The assistant works without a channel, without connectors,
+without routines and without a brain — it is just quieter, and it forgets more.
 
 ## If setup breaks halfway
 

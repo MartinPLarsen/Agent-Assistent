@@ -1,4 +1,4 @@
-# Phase 7 — Activate
+# Phase 8 — Activate
 
 Nothing gets rewritten here. `AGENTS.md` was already correct before the wizard started;
 all this phase does is verify that the generated pieces exist and then hand over.
@@ -16,6 +16,7 @@ Check each. Any failure is fixable by re-running that phase, not by starting ove
 | `memory/MEMORY.md` | at least five index lines |
 | `memory/facts/` | one file per index line, each with frontmatter |
 | `memory/convo_log.md`, `open_commitments.md`, `session.log.md` | exist, even if empty |
+| `agent.json` → `brain.path` | resolves to a real directory with `knowledge-base/wiki/index.md` in it |
 
 ```bash
 grep -rl '{{[A-Z_]*}}' *.md 2>/dev/null && echo "unsubstituted placeholders above"
@@ -41,8 +42,8 @@ ls -l .claude/skills/
 Set `.setup-state.json` to:
 
 ```json
-{ "completed": true, "current_phase": 7,
-  "steps_completed": ["phase_0","phase_1","phase_2","phase_3","phase_4","phase_5","phase_6","phase_7"] }
+{ "completed": true, "current_phase": 8,
+  "steps_completed": ["phase_0","phase_1","phase_2","phase_3","phase_4","phase_5","phase_6","phase_7","phase_8"] }
 ```
 
 From the next session, `AGENTS.md` sends you straight past the wizard.

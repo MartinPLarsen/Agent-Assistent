@@ -29,7 +29,11 @@ Before your first reply in a session:
 4. `memory/MEMORY.md` — the index of everything you know
 5. `memory/convo_log.md` — where the last session left off
 6. `memory/open_commitments.md` — what is still owed
-7. `agent.json` — your channel, timezone, and which routines are enabled
+7. `agent.json` — your channel, timezone, which routines are enabled, and where the brain is
+
+Do **not** read the brain's pages at startup. Its index is queried on demand (see **The
+second brain**), and reading it eagerly is how a startup that costs one file turns into one
+that costs a hundred.
 
 Then, if `agent.json` enables scheduled routines and the runtime supports them, recreate
 them (see **Routines** below) and confirm you are online on the configured channel.
@@ -76,6 +80,51 @@ memory.
 Session state and knowledge are different things: what happened this session goes in
 `memory/convo_log.md`, what you learned goes in `memory/facts/`.
 
+**You do not enforce the caps.** `scripts/memory-caps.sh` owns them — session log at 48
+hours, index at 24KB, convo log at one session. Earlier versions of this file asked you to
+trim on every write; you are busy, and the index grew until it could not be loaded. Write
+what belongs, and let the script hold the line.
+
+## The second brain
+
+`memory/` is what you know about the user. The brain is what the two of you have worked
+out together, and it lives in its own repo so it outlives any clone of this one. Its path
+is `agent.json` → `brain.path`. If that key is absent, the user declined a brain in setup;
+say so once if it ever becomes relevant, and do not bring it up again.
+
+**Reading it.** Query, never browse:
+
+```bash
+node scripts/brain.mjs recall "<question>"
+```
+
+That scores the index without opening pages, opens the single best match, and returns the
+section that answers. Start from what it returns. Drill deeper only when that is not
+enough, and cite the page path for every claim you make from it. When `agent.json` says
+`"engine": "markdown"` there is no Node on the machine: read `knowledge-base/wiki/index.md`
+yourself and open only the pages whose description matches.
+
+**Writing to it.** A page is a living document, rewritten as understanding improves, not a
+dated entry. Update the page that already covers a subject rather than adding a second one.
+
+```bash
+node scripts/brain.mjs store "<text>" --name <slug> --title "..." --desc "..."
+```
+
+Then commit and push the brain repo. The engine deliberately does not commit for you —
+a tool that pushes on its own is a tool nobody can predict.
+
+**The line between the two.** A fact about the user goes in `memory/facts/`. Anything with
+substance you would want to reread in six months — how a system works, why a decision went
+the way it did, what was learned — belongs in the brain. When genuinely torn, the brain:
+it is the layer with room to grow.
+
+**Capture runs without you.** If `brain.capture_hook` is true, every Claude Code session on
+this machine appends a line to the brain's `.harvest-queue.jsonl` when it ends. The daily
+harvest reads that queue and turns the day into a session note, then folds the note into
+the pages it touches. A note that never reaches a page is an input nobody digested; the
+brain grows through its pages, not its notes.
+
 ## Session log
 
 Every inbound message from the user gets one line in `memory/session.log.md`, written
@@ -86,8 +135,8 @@ Every inbound message from the user gets one line in `memory/session.log.md`, wr
 <one sentence, present tense, under 120 characters>
 ```
 
-Newest on top. After writing, trim: if the file is over 100KB or its oldest entry is more
-than 48 hours old, drop oldest entries until both hold. Leave the header comments.
+Newest on top. Do not trim it — `scripts/memory-caps.sh` does that, by age and by size,
+and it keeps the header comments. Your job is the write, not the housekeeping.
 
 This is not a diary. Every watcher reads this file to tell "already being discussed" from
 "gone quiet", and the silence rule that stops a nudge landing mid-conversation reads it

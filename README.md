@@ -17,8 +17,8 @@ cd my-assistant
 claude          # or: codex
 ```
 
-The assistant reads `AGENTS.md`, sees it is not configured, and runs the wizard. Eight
-short phases, 20 to 30 minutes. You can stop after any of them and resume later.
+The assistant reads `AGENTS.md`, sees it is not configured, and runs the wizard. Nine
+short phases, 25 to 35 minutes. You can stop after any of them and resume later.
 
 ## What the wizard does
 
@@ -31,7 +31,8 @@ short phases, 20 to 30 minutes. You can stop after any of them and resume later.
 | 4 | Which systems it may touch. |
 | 5 | Scheduled routines: daily briefing, watchers, weekly self-review. |
 | 6 | Seeds memory from everything the earlier phases learned. |
-| 7 | Verifies, links the skills, says hello. |
+| 7 | Creates the second brain, in its own repo, and wires machine-wide capture. |
+| 8 | Verifies, links the skills, says hello. |
 
 Phase 0 is the one that matters. Twenty minutes of interview cannot tell an assistant what
 two minutes of looking at your actual repos can.
@@ -77,11 +78,34 @@ it.
 
 ## Memory layers
 
-- `memory/facts/` — what it knows. Permanent, one fact per file.
+- `memory/facts/` — what it knows about *you*. Permanent, one fact per file.
 - `memory/convo_log.md` — where the last session left off. Overwritten each session.
 - `memory/session.log.md` — a rolling 48-hour log of inbound messages, so the watchers can
   tell "already being discussed" from "gone quiet".
 
-## License
+Caps on all three are enforced by `scripts/memory-caps.sh`, not by the assistant
+remembering to prune. A rule with no owner in code is a wish.
 
-MIT.
+## The second brain
+
+A separate repo, created by phase 7, holding what you and the assistant have worked out
+together: living pages, an index, and a dated log. Memory is what it knows about you; the
+brain is the knowledge itself, and it outlives any single clone of this kit.
+
+```
+knowledge-base/
+  raw/pages/          living pages, rewritten as you learn more
+  raw/session-notes/  daily capture, the input to those pages
+  wiki/index.md       one line per page — the whole retrieval index
+  wiki/log.md         dated, append-only history
+  outputs/            finished briefings and reports
+```
+
+`scripts/brain.mjs` is the retrieval engine: `recall`, `store`, `ask`, `check`. Node, no
+dependencies. Without Node the assistant reads `wiki/index.md` itself — slower, same
+answers.
+
+A capture hook in `~/.claude/settings.json` records every Claude Code session on the
+machine, so work done in other repos reaches the brain too. It is the only thing this kit
+installs outside its own folder, it is opt-in, and
+`scripts/install-capture-hook.sh --uninstall` removes it.

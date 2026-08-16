@@ -83,13 +83,60 @@ done_ok "wizard gate fires only before setup completes"
 # Setup phases form an unbroken chain
 python3 - <<'PY' || fail=1
 import pathlib, sys
-bad = [i for i in range(7)
+bad = [i for i in range(8)
        if f'"current_phase": {i+1}' not in next(pathlib.Path("setup").glob(f"0{i}-*.md")).read_text()]
 if bad:
     print(f"setup phases do not advance: {bad}")
     sys.exit(1)
 PY
 say "setup phase chain intact" "ok"
+
+# The brain engine's own selftest. It builds a brain in a temp dir, stores, recalls, and
+# asserts the parts that are easy to get subtly wrong — a duplicated index line, a recall
+# that returns the page title instead of the answer.
+begin
+if command -v node >/dev/null 2>&1; then
+  node scripts/brain.mjs selftest >/dev/null 2>&1 || bad "brain.mjs" "selftest failed"
+  done_ok "brain engine selftest"
+else
+  say "brain engine selftest" "skipped — no node"
+fi
+
+# Every script the brain phase tells the user to run must exist and be executable. A phase
+# that names a missing script fails in front of the user, mid-setup, which is the worst
+# possible moment to discover it.
+begin
+for s in scripts/brain.mjs scripts/memory-caps.sh scripts/install-capture-hook.sh scripts/capture-session.sh; do
+  [ -f "$s" ] || bad "$s" "referenced by setup/07-brain.md but missing"
+  [ -x "$s" ] || bad "$s" "not executable"
+done
+done_ok "brain phase scripts exist and are executable"
+
+# The capture hook is the only thing this kit writes outside its own folder, so the path
+# that removes it again matters as much as the one that installs it. Round-trip it against
+# a throwaway settings file and confirm nothing of the user's survives or is lost.
+begin
+sandbox="$(mktemp -d)"
+printf '{"model":"x","hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"echo keep-me"}]}]}}' > "$sandbox/settings.json"
+CLAUDE_SETTINGS="$sandbox/settings.json" scripts/install-capture-hook.sh "$sandbox" >/dev/null 2>&1 \
+  || bad "install-capture-hook.sh" "install failed"
+CLAUDE_SETTINGS="$sandbox/settings.json" scripts/install-capture-hook.sh "$sandbox" >/dev/null 2>&1 \
+  || bad "install-capture-hook.sh" "second install failed"
+python3 -c "
+import json,sys
+d=json.load(open('$sandbox/settings.json'))
+n=len(d.get('hooks',{}).get('SessionEnd',[]))
+sys.exit(0 if n==1 else 1)" || bad "install-capture-hook.sh" "not idempotent — stacked duplicate hooks"
+CLAUDE_SETTINGS="$sandbox/settings.json" scripts/install-capture-hook.sh --uninstall >/dev/null 2>&1 \
+  || bad "install-capture-hook.sh" "uninstall failed"
+python3 -c "
+import json,sys
+d=json.load(open('$sandbox/settings.json'))
+ok = 'SessionEnd' not in d.get('hooks',{}) and d.get('model')=='x' \
+     and len(d.get('hooks',{}).get('SessionStart',[]))==1
+sys.exit(0 if ok else 1)" || bad "install-capture-hook.sh" "uninstall did not restore the file cleanly"
+rm -rf "$sandbox"
+done_ok "capture hook installs, is idempotent, and uninstalls cleanly"
 
 echo
 [ "$fail" -eq 0 ] && echo "All checks passed." || echo "Some checks failed."

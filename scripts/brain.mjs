@@ -108,15 +108,45 @@ function bestSection(text, qTerms, maxChars = 1200) {
 
 // ---------------------------------------------------------------- commands
 
+// Index lines carry a title and one line of description. That is enough for most queries
+// and it is why retrieval is cheap. It is not enough when the answer lives in the body and
+// the question uses none of the indexer's words — "when am I most effective" against a page
+// described as "peak 12-22". Returning nothing there is the failure that makes a brain feel
+// broken, so fall back to scanning the bodies. At one person's scale that is a few dozen
+// small files; the index still does the work whenever it can.
+function bodyFallback(p, qTerms) {
+  if (!existsSync(p.pages)) return [];
+  return readdirSync(p.pages)
+    .filter(f => f.endsWith('.md'))
+    .map(f => {
+      const file = join(p.pages, f);
+      const text = readFileSync(file, 'utf8');
+      const bTerms = new Set(terms(text));
+      const s = qTerms.reduce((acc, t) => acc + (bTerms.has(t) ? 1 : 0), 0);
+      return { title: basename(f, '.md').replace(/-/g, ' '), target: `../raw/pages/${f}`, desc: '', file, s, viaBody: true };
+    })
+    .filter(e => e.s > 0)
+    .sort((a, b) => b.s - a.s);
+}
+
 function cmdRecall(question, opts) {
   const p = paths(brainRoot(opts.brain));
   const qTerms = terms(question);
-  const ranked = readIndex(p).map(e => ({ ...e, s: score(e, qTerms) }))
-                             .filter(e => e.s > 0)
-                             .sort((a, b) => b.s - a.s);
+  let ranked = readIndex(p).map(e => ({ ...e, s: score(e, qTerms) }))
+                           .filter(e => e.s > 0)
+                           .sort((a, b) => b.s - a.s);
+  let viaBody = false;
   if (ranked.length === 0) {
-    console.log(`No index match for: ${question}\n\nSay so plainly. Do not fill the gap with a guess.`);
+    ranked = bodyFallback(p, qTerms);
+    viaBody = ranked.length > 0;
+  }
+  if (ranked.length === 0) {
+    console.log(`No match for: ${question}\n\nSay so plainly. Do not fill the gap with a guess.`);
     return 1;
+  }
+  if (viaBody) {
+    console.log(`(no index line matched — found by scanning page bodies. The index line for`);
+    console.log(`this page is too narrow; consider widening its description.)\n`);
   }
   const top = ranked[0];
   const out = [`# Evidence for: ${question}`, ''];
@@ -247,6 +277,18 @@ function cmdSelftest() {
   const sec = bestSection(page, terms('deploy token'));
   assert(sec.includes('Failure mode'), `bestSection returned the wrong section: ${JSON.stringify(sec)}`);
   assert(!sec.startsWith('# Deploy pipeline'), 'bestSection returned the empty H1 block');
+
+  // The body fallback: a question whose words appear only in the page body, never in the
+  // index line, must still find the page. Without this, recall answers "no match" to a
+  // question the brain can answer — the failure that makes people stop trusting it.
+  cmdStore('Bedst mellem 12 og 22. Morgen er til planlaegning.', { brain: root, name: 'work-rhythm', title: 'Work rhythm', desc: 'peak hours' });
+  // Assert through cmdRecall, not through bodyFallback directly: the first version of this
+  // test called the helper, so breaking the CALL SITE inside cmdRecall left it green. Test
+  // the wiring, not the part you happen to have a handle on.
+  assert(readIndex(p).every(e => score(e, terms('planlaegning')) === 0),
+    'selftest premise broken: the index should NOT match this query');
+  assert(cmdRecall('planlaegning', { brain: root }) === 0,
+    'recall returned no match for a word that is in a page body');
 
   // check must catch an orphan page.
   writeFileSync(join(p.pages, 'orphan.md'), '# Orphan\n');

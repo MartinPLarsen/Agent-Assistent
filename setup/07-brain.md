@@ -28,18 +28,26 @@ Ask one question at a time, as everywhere else in the wizard.
 Default the path to a sibling of this repo — `../<agent-name>-brain` — and say the path
 out loud before creating anything.
 
-### If they choose local
+### Scaffold it — both answers need this
 
 ```bash
 mkdir -p "$BRAIN/knowledge-base/raw/pages" "$BRAIN/knowledge-base/raw/session-notes" \
          "$BRAIN/knowledge-base/wiki" "$BRAIN/knowledge-base/outputs"
+printf '# Index\n\n' > "$BRAIN/knowledge-base/wiki/index.md"
+printf '# Log\n\n' > "$BRAIN/knowledge-base/wiki/log.md"
 git -C "$BRAIN" init -q
 ```
+
+Create the empty index now rather than letting the first `store` create it. A layout that
+is only complete after someone writes to it fails its own check in between, and "missing
+index" is an alarming thing to read halfway through your own setup.
+
+### If they chose local, stop here
 
 Say plainly, once: without a remote, the brain does not survive the machine. Do not repeat
 it later.
 
-### If they choose GitHub
+### If they chose GitHub, keep going
 
 Ask **which account** — not just "do you have GitHub". People have more than one, and the
 right one is often not the one they are logged in as. This matters most when the assistant

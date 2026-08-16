@@ -70,8 +70,8 @@ cat <<'EOF'
       claude          (Claude Code)
       codex           (Codex CLI)
 
-  It reads AGENTS.md, sees setup is unfinished, and walks you through eight
-  short phases. Budget 20-30 minutes. You can stop after any phase and pick
+  It reads AGENTS.md, sees setup is unfinished, and walks you through nine
+  short phases. Budget 25-35 minutes. You can stop after any phase and pick
   it back up later.
 
 EOF

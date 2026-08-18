@@ -25,7 +25,9 @@ curl -fsSL https://bun.sh/install | bash
 ```
 
 **Then close the terminal window completely and open a new one.** The new window is the
-only one that knows Bun exists.
+only one that knows Bun exists. A session started before this step can never pick it up —
+reconnecting the plugin from inside it fails with `ENOENT`, which just means "cannot find
+bun".
 
 Check it worked:
 
@@ -141,6 +143,7 @@ terminal unless the line starts with a slash.
 | `claude --version` gives a number | If not: `echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc`, then open a new terminal |
 | The `Listening for channel messages` line appeared at startup | If not, you started without `--channels` |
 | `/plugin list` shows telegram | If not, step 4 did not take |
+| No `Failed to reconnect … ENOENT` | That error is the assistant failing to find `bun`. The session started before Bun existed — quit it, open a new terminal, start again |
 | Your bot answered with a six-character code | If not, the connection is not up — the fault is above this line, not in the pairing |
 
 If the bot never sends a code, do not keep retrying the pairing. Nothing is listening yet;

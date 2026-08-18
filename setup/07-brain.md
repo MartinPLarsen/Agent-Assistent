@@ -16,19 +16,24 @@ Ask one question at a time, as everywhere else in the wizard.
 ## Q1 — Where should it live
 
 > "Din second brain får sit eget repo, så den overlever at du klonner mig forfra.
-> To muligheder:
+> Tre muligheder:
 >
 > Lokalt: ligger kun på denne maskine. Ingen konto, intet at sætte op. Men den dør med
 > maskinen, og du kan ikke læse den fra telefonen.
 >
+> Lokalt + Obsidian: samme som lokalt, men mappen åbnes som en Obsidian-vault, så du selv
+> kan læse, søge og skrive i den med links mellem noterne. Kræver at Obsidian er
+> installeret (gratis).
+>
 > GitHub: privat repo. Overlever maskinen, læsbar overalt. Kræver at jeg kan nå din konto.
 >
-> Jeg foreslår GitHub, hvis du har en konto. Sig til hvis lokalt er nok."
+> Jeg foreslår GitHub, hvis du har en konto — den kan kombineres med Obsidian bagefter.
+> Sig til hvis lokalt er nok."
 
 Default the path to a sibling of this repo — `../<agent-name>-brain` — and say the path
 out loud before creating anything.
 
-### Scaffold it — both answers need this
+### Scaffold it — all three answers need this
 
 ```bash
 mkdir -p "$BRAIN/knowledge-base/raw/pages" "$BRAIN/knowledge-base/raw/session-notes" \
@@ -42,10 +47,42 @@ Create the empty index now rather than letting the first `store` create it. A la
 is only complete after someone writes to it fails its own check in between, and "missing
 index" is an alarming thing to read halfway through your own setup.
 
+### Write the vault conventions — every answer needs this
+
+`setup/templates/brain-CLAUDE.md` goes to `$BRAIN/CLAUDE.md`. It tells any Claude Code
+session opened on the brain folder how the vault works, so the brain stays usable outside
+this assistant. Fill the placeholders from phase 1 — `{{USER_NAME}}`, `{{AGENT_NAME}}`,
+`{{ROLE_AND_WORK}}`, `{{COMMUNICATION_PREFERENCES}}` — with what the user actually said.
+Leave nothing in double braces.
+
 ### If they chose local, stop here
 
 Say plainly, once: without a remote, the brain does not survive the machine. Do not repeat
 it later.
+
+### If they chose local + Obsidian
+
+An Obsidian vault is a folder with a `.obsidian/` directory in it. Obsidian creates that
+itself the first time the folder is opened, so there is nothing to scaffold — the only
+work is checking Obsidian exists and telling them the two clicks:
+
+```bash
+ls -d /Applications/Obsidian.app >/dev/null 2>&1 && echo "obsidian ok" || echo "no obsidian"
+```
+
+If it is missing, say so and give the download link (https://obsidian.md) — do not install
+software on their machine. If it is there:
+
+> "Åbn Obsidian → Open folder as vault → vælg <BRAIN_PATH>. Så kan du selv læse og skrive
+> i din brain, og jeg skriver i den samme mappe."
+
+Two things to say once, and only once. `raw/pages/` is where the pages live, `wiki/index.md`
+is the entry point. And when they write notes in Obsidian, `[[wikilinks]]` in a page body
+are fine — but the line in `wiki/index.md` must stay a markdown link, or recall stops
+seeing the page. The CLAUDE.md you just wrote says the same thing; this is the one time
+you say it out loud.
+
+Note it in `agent.json` as `"obsidian": true`. Then say the local warning above and stop.
 
 ### If they chose GitHub, keep going
 
@@ -111,6 +148,7 @@ Everything else in the kit reads this block. Merge it into `agent.json`:
   "remote": "github",
   "account": "<github account, or null>",
   "capture_hook": true,
+  "obsidian": false,
   "engine": "node"
 }
 ```
@@ -172,8 +210,9 @@ brain forgot" rather than as a broken link.
 
 ## Output
 
-Brain repo created, config written, capture hook installed or declined, three to five
-pages seeded and committed. Merge:
+Brain repo created, `CLAUDE.md` written from the template with no placeholders left,
+config written, capture hook installed or declined, three to five pages seeded and
+committed. Merge:
 
 ```json
 { "current_phase": 8, "steps_completed": [..., "phase_7"] }

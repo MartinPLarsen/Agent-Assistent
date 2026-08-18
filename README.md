@@ -16,6 +16,20 @@ cd my-assistant
 ./setup.sh
 ```
 
+### No git? Download the ZIP
+
+On the GitHub page: **Code → Download ZIP**, then double-click it. You get a folder called
+`Agent-Assistent-main`. In Terminal:
+
+```bash
+cd ~/Downloads/Agent-Assistent-main
+bash setup.sh
+```
+
+Type `cd ` with the space, then drag the folder into the Terminal window — it fills in the
+path for you. Use `bash setup.sh` rather than `./setup.sh`: a ZIP can lose the executable
+bit, and `bash` works either way.
+
 That one command is the whole install. It checks what your machine has, offers to install
 Claude Code if it is missing, links the skills, and then starts the assistant for you.
 

@@ -1,9 +1,8 @@
 {
   "completed": false,
-  "current_phase": 4,
-  "language": "da",
-  "agent_name": "Donna",
-  "channel": "telegram",
-  "telegram_chat_id": "8380764254",
-  "steps_completed": ["phase_0", "phase_1", "phase_2", "phase_3"]
+  "current_phase": 0,
+  "language": null,
+  "agent_name": null,
+  "channel": null,
+  "steps_completed": []
 }

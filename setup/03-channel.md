@@ -22,16 +22,30 @@ the launcher flag or the allowlist approval.
 
 Codex CLI has no equivalent plugin. A Codex user is terminal-only for now.
 
-## Step 1 — Plugin enabled
+## Step 1 — Bun, then the plugin
 
-Check `~/.claude/settings.json` for:
+The channel server runs on Bun. Without it the server never starts, and the failure is
+silent: no error at boot, no reply from the bot, no `access.json` ever written. Check
+before anything else, because every later symptom looks like a broken pairing instead.
+
+```bash
+bun --version || echo "missing — install with: curl -fsSL https://bun.sh/install | bash"
+```
+
+If it was just installed, the user needs a new terminal before `bun` is on the PATH.
+
+Then the plugin, from inside a session — you cannot do this for them:
+
+```
+/plugin install telegram@claude-plugins-official
+/reload-plugins
+```
+
+Already installed shows up in `~/.claude/settings.json` as:
 
 ```json
 "enabledPlugins": { "telegram@claude-plugins-official": true }
 ```
-
-Missing? The user enables it with `/plugin`, then restarts Claude Code. You cannot do this
-for them.
 
 ## Step 2 — Create the bot
 
@@ -80,15 +94,20 @@ whether it arrived.
 
 Work down the list; the first failure is the cause.
 
-1. `grep channels scripts/open-agent.sh` shows the plugin flag
-2. `/plugin list | grep telegram` shows it enabled
-3. `.mcp.json` contains **no** telegram entry — `--channels` handles it, and a duplicate
+1. `bun --version` answers. No Bun, no channel server, and nothing says so out loud
+2. `grep channels scripts/open-agent.sh` shows the plugin flag
+3. `/plugin list | grep telegram` shows it enabled
+4. `.mcp.json` contains **no** telegram entry — `--channels` handles it, and a duplicate
    entry steals the polling loop
-4. `ls ~/.claude/channels/telegram/` shows `.env`, and the session was restarted after
-5. `access.json` in that folder lists the chat ID from step 3
-6. No `TELEGRAM_STATE_DIR` is set anywhere. A single assistant needs none, and a stray one
+5. `ls ~/.claude/channels/telegram/` shows the env file, and the session was restarted after
+6. `access.json` in that folder lists their numeric user ID
+7. No `TELEGRAM_STATE_DIR` is set anywhere. A single assistant needs none, and a stray one
    points the server at a different folder than the skills write to — a silent bot
-7. `curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates"` returns something
+8. `curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates"` returns something
+
+An inbound message still sitting unread in `getUpdates` is the tell that the server never
+polled at all: the fault is upstream of pairing, not in it. Hunting the missing pairing
+code from that state is the single biggest time sink in this phase.
 
 ## Limits worth knowing
 

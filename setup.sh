@@ -16,6 +16,22 @@ ask()  { local r; read -r -p "$1 [y/N] " r; case "$r" in [yY]*) return 0 ;; *) r
 # Which runtime we hand over to at the end. Set by preflight.
 RUNTIME=""
 
+# Claude Code installs itself into ~/.local/bin. Its installer does not always put that
+# directory on the PATH of *future* shells, so the kit starts fine once and then the next
+# terminal answers "zsh: command not found: claude". Fix it where it is fixable: this
+# shell now, and the shell profile so tomorrow's terminal agrees.
+persist_local_bin() {
+  [ -x "$HOME/.local/bin/claude" ] || return 0
+  case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
+
+  local rc line='export PATH="$HOME/.local/bin:$PATH"'
+  case "${SHELL##*/}" in bash) rc="$HOME/.bash_profile" ;; *) rc="$HOME/.zshrc" ;; esac
+  grep -qF "$line" "$rc" 2>/dev/null && return 0
+
+  printf '\n# Added by the assistant kit so new terminals can find claude\n%s\n' "$line" >> "$rc"
+  echo "     Added ~/.local/bin to your PATH in $rc — new terminals will find claude."
+}
+
 # Node is only needed by the brain engine (scripts/brain.mjs). Without it the assistant
 # reads wiki/index.md itself — slower, same answers — so a missing Node is a warning,
 # never a stop. Claude Code itself ships as a native binary and needs no Node.
@@ -42,6 +58,7 @@ preflight() {
   if have claude; then
     RUNTIME=claude
     printf '  %-22s %s\n' "claude (Claude Code)" "ok"
+    persist_local_bin
   elif have codex; then
     RUNTIME=codex
     printf '  %-22s %s\n' "codex (Codex CLI)" "ok"
@@ -50,9 +67,9 @@ preflight() {
     echo "     You need Claude Code or Codex CLI. Claude Code is the one this kit is built for."
     if ask "     Install Claude Code now (downloads from claude.ai)?"; then
       curl -fsSL https://claude.ai/install.sh | bash
-      # The installer puts the binary in ~/.local/bin, which the current shell may not
-      # know about yet. Look there directly rather than telling the user to restart.
-      have claude || export PATH="$HOME/.local/bin:$PATH"
+      # The installer puts the binary in ~/.local/bin, which this shell and every later
+      # one may not know about yet. persist_local_bin fixes both.
+      persist_local_bin
       if have claude; then
         RUNTIME=claude
         printf '  %-22s %s\n' "claude (Claude Code)" "installed"

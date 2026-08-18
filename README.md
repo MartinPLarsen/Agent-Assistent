@@ -14,11 +14,17 @@ One assistant. Not a framework for building teams of them.
 git clone <this repo> my-assistant
 cd my-assistant
 ./setup.sh
-claude          # or: codex
 ```
 
+That one command is the whole install. It checks what your machine has, offers to install
+Claude Code if it is missing, links the skills, and then starts the assistant for you.
+
 The assistant reads `AGENTS.md`, sees it is not configured, and runs the wizard. Nine
-short phases, 25 to 35 minutes. You can stop after any of them and resume later.
+short phases, 25 to 35 minutes. You can stop after any of them and resume later — type
+`/exit` and run `./setup.sh` again when you want to continue.
+
+`./setup.sh --check` runs only the tool check. `./setup.sh --no-launch` does everything
+except starting the assistant.
 
 ## What the wizard does
 
@@ -73,8 +79,9 @@ Telegram currently needs Claude Code. On Codex the assistant is terminal-only.
 - Optional: Node 18+ and a free Trigger.dev account, for routines that fire while your
   machine is off
 
-Nothing is installed for you. The wizard detects what is missing and tells you how to get
-it.
+`./setup.sh` checks all of these before it does anything else. The only thing it offers to
+install for you is Claude Code, and it asks first. Everything else it names, with the exact
+command, and stops so you can decide.
 
 ## Memory layers
 

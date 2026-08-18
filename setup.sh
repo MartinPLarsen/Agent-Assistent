@@ -3,10 +3,95 @@ set -euo pipefail
 
 # Bootstrap for the agent starter kit.
 #
-#   ./setup.sh                 detach template git history, link skills, print next step
+#   ./setup.sh                 check tools, detach template git history, link skills, launch
 #   ./setup.sh --link-skills   only refresh the skill symlinks (safe to re-run any time)
+#   ./setup.sh --check         run the tool check and stop
+#   ./setup.sh --no-launch     do everything except starting the agent
 
 KIT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+have() { command -v "$1" >/dev/null 2>&1; }
+ask()  { local r; read -r -p "$1 [y/N] " r; case "$r" in [yY]*) return 0 ;; *) return 1 ;; esac; }
+
+# Which runtime we hand over to at the end. Set by preflight.
+RUNTIME=""
+
+# Node is only needed by the brain engine (scripts/brain.mjs). Without it the assistant
+# reads wiki/index.md itself — slower, same answers — so a missing Node is a warning,
+# never a stop. Claude Code itself ships as a native binary and needs no Node.
+node_ok() {
+  have node || return 1
+  [ "$(node -p 'parseInt(process.versions.node, 10)' 2>/dev/null || echo 0)" -ge 18 ]
+}
+
+preflight() {
+  local blocked=0
+  echo
+  echo "  Checking what this machine has:"
+  echo
+
+  if have git; then
+    printf '  %-22s %s\n' "git" "ok"
+  else
+    printf '  %-22s %s\n' "git" "MISSING"
+    echo "     Run this, let it finish, then run ./setup.sh again:"
+    echo "       xcode-select --install"
+    blocked=1
+  fi
+
+  if have claude; then
+    RUNTIME=claude
+    printf '  %-22s %s\n' "claude (Claude Code)" "ok"
+  elif have codex; then
+    RUNTIME=codex
+    printf '  %-22s %s\n' "codex (Codex CLI)" "ok"
+  else
+    printf '  %-22s %s\n' "agent runtime" "MISSING"
+    echo "     You need Claude Code or Codex CLI. Claude Code is the one this kit is built for."
+    if ask "     Install Claude Code now (downloads from claude.ai)?"; then
+      curl -fsSL https://claude.ai/install.sh | bash
+      # The installer puts the binary in ~/.local/bin, which the current shell may not
+      # know about yet. Look there directly rather than telling the user to restart.
+      have claude || export PATH="$HOME/.local/bin:$PATH"
+      if have claude; then
+        RUNTIME=claude
+        printf '  %-22s %s\n' "claude (Claude Code)" "installed"
+      else
+        echo "     Install finished but 'claude' is still not on PATH. Open a new terminal and re-run ./setup.sh."
+        blocked=1
+      fi
+    else
+      echo "     Install it yourself with:  curl -fsSL https://claude.ai/install.sh | bash"
+      blocked=1
+    fi
+  fi
+
+  if node_ok; then
+    printf '  %-22s %s\n' "node 18+" "ok"
+  else
+    printf '  %-22s %s\n' "node 18+" "missing — optional"
+    echo "     Without it the second brain still works, just slower. To add it:"
+    if have brew; then
+      echo "       brew install node"
+    else
+      echo "       Download the LTS installer from https://nodejs.org"
+    fi
+  fi
+
+  if have python3; then
+    printf '  %-22s %s\n' "python3" "ok"
+  else
+    printf '  %-22s %s\n' "python3" "missing — optional"
+    echo "     Only ./scripts/check.sh needs it. 'xcode-select --install' provides it."
+  fi
+
+  echo
+  if [ "$blocked" -eq 1 ]; then
+    echo "  Fix the MISSING lines above, then run ./setup.sh again."
+    exit 1
+  fi
+  echo "  Everything required is in place."
+}
 
 link_skills() {
   # Claude Code discovers skills in .claude/skills/. The canonical copies live in
@@ -37,6 +122,13 @@ if [ "${1:-}" = "--link-skills" ]; then
   exit 0
 fi
 
+if [ "${1:-}" = "--check" ]; then
+  preflight
+  exit 0
+fi
+
+preflight
+
 # Detach from the template's history so the user's agent gets its own repo.
 # Only fires when the remote still points at the template — never on a repo
 # the user has already made theirs.
@@ -65,13 +157,19 @@ link_skills
 
 cat <<'EOF'
 
-  Kit is ready. Next step: open it in your agent runtime.
-
-      claude          (Claude Code)
-      codex           (Codex CLI)
+  Kit is ready. Starting your assistant now.
 
   It reads AGENTS.md, sees setup is unfinished, and walks you through nine
   short phases. Budget 25-35 minutes. You can stop after any phase and pick
-  it back up later.
+  it back up later. To leave, type /exit — then run ./setup.sh again to return.
 
 EOF
+
+if [ "${1:-}" = "--no-launch" ]; then
+  echo "  --no-launch given. Start it yourself with: $RUNTIME"
+  echo
+  exit 0
+fi
+
+cd "$KIT_DIR"
+exec "$RUNTIME"
